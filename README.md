@@ -3,9 +3,9 @@
 soomla-android-core
 ===============
 
-When using the SOOMLA framework, you always start by initializing the core module:
+When using the SOOMLA framework, you always start by initializing the core module from your main activity:
 ```java
-Soomla.initialize("[YOUR SOOMLA SECRET HERE]");
+Soomla.initialize(this, "[YOUR SOOMLA SECRET HERE]");
 ```
 
 This sets up the local on-device database used by SOOMLA.  The secret is used for encrypting the data, make sure to choose a good one.
@@ -25,7 +25,7 @@ SOOMLA modules internally use these features, though we encourage you to use the
 
 #### Pre baked jar:
 
-- [soomla-android-core v1.1.0](http://library.soom.la/fetch/android-core/1.1.0?cf=github)
+- [soomla-android-core v1.3.0](http://library.soom.la/fetch/android-core/1.3.0?cf=github)
 
 #### From sources:
  - Clone this repository recursively: `git clone --recursive https://github.com/soomla/soomla-android-core.git`

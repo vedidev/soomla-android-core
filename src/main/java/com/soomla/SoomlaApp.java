@@ -25,10 +25,16 @@ import com.soomla.events.AppToBackgroundEvent;
 public class SoomlaApp extends Application{
 
 	protected static SoomlaApp mInstance = null;
+	protected static Application mAppInstance = null;
 
+	@Deprecated
 	public static SoomlaApp instance() {
     	return mInstance;
     }
+
+	public static Application appInstance() {
+		return mAppInstance;
+	}
 
     private Thread.UncaughtExceptionHandler defaultUEH;
 
@@ -38,6 +44,9 @@ public class SoomlaApp extends Application{
     public void onCreate() {
         super.onCreate();
         mInstance = this;
+		if (mAppInstance == null) {
+			mAppInstance = this;
+		}
         context = getApplicationContext();
 
         // Fixing AsyncTask not found exception
@@ -60,11 +69,26 @@ public class SoomlaApp extends Application{
         });
     }
 
-    /** Setters and Getters */
+	@Override
+	public Context getApplicationContext() {
+		try {
+			return super.getApplicationContext();
+		} catch (NullPointerException e) {
+			return context;
+		}
+	}
 
+	/** Setters and Getters */
+
+	@Deprecated
     public static void setExternalContext(Context oContext) {
         context = oContext;
     }
+
+	public static void setApplication(Application application) {
+		mAppInstance = application;
+		context = application.getApplicationContext();
+	}
 
     public static Context getAppContext() {
         return context;

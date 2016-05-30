@@ -16,16 +16,14 @@
 
 package com.soomla.data;
 
-import android.text.TextUtils;
-
 import com.soomla.Soomla;
 import com.soomla.SoomlaApp;
 import com.soomla.SoomlaConfig;
 import com.soomla.SoomlaUtils;
-import com.soomla.util.AESObfuscator;
+import com.soomla.keeva.Keeva;
+import com.soomla.keeva.KeevaConfig;
 
-import java.security.InvalidParameterException;
-import java.util.ArrayList;
+import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.List;
 
@@ -166,167 +164,67 @@ public class KeyValueStorage {
     }
 
     public KeyValueStorage(String storageName, String secret) {
-        if (TextUtils.isEmpty(secret)) {
-            throw new InvalidParameterException("You must initialize KeyValueStorage with a secret. storageName: " + mStorageName);
+        KeevaConfig.logDebug = SoomlaConfig.logDebug;
+        try {
+            Field obfuscationSaltField = KeevaConfig.class.getDeclaredField("obfuscationSalt");
+            obfuscationSaltField.setAccessible(true);
+            obfuscationSaltField.set(null, SoomlaConfig.obfuscationSalt);
+            Field dbDeleteField = KeevaConfig.class.getDeclaredField("DB_DELETE");
+            dbDeleteField.setAccessible(true);
+            dbDeleteField.set(null, SoomlaConfig.DB_DELETE);
+        } catch (Exception e) {
+            SoomlaUtils.LogError(TAG, "Error setting SOOMLA's config to Keeva " + e.getLocalizedMessage());
         }
-
-        mStorageName = storageName;
-        mSecret = secret;
-        mKvDatabase = new KeyValDatabase(SoomlaApp.getAppContext(), storageName);
-        mObfuscator = new AESObfuscator(SoomlaConfig.obfuscationSalt,
-                SoomlaApp.getAppContext().getPackageName(),
-                SoomlaUtils.deviceId(),
-                mSecret);
+        mKeeva = new Keeva(SoomlaApp.getAppContext(), storageName, secret);
     }
 
     public void purgeStorage() {
-        SoomlaUtils.LogDebug(TAG, "purging database" + (mStorageName != null ? " in storage: " + mStorageName : ""));
-
-        mKvDatabase.purgeDatabaseEntries(SoomlaApp.getAppContext());
+        mKeeva.purgeStorage();
     }
 
     public void remove(String key) {
-        SoomlaUtils.LogDebug(TAG, "deleting " + key + (mStorageName != null ? " from storage: " + mStorageName : ""));
-
-        key = mObfuscator.obfuscateString(key);
-
-        mKvDatabase.deleteKeyVal(key);
+        mKeeva.remove(key);
     }
 
     public void put(String key, String val) {
-
-        SoomlaUtils.LogDebug(TAG, "setting " + val + " for key: " + key + (mStorageName != null ? " in storage: " + mStorageName : ""));
-
-        key = mObfuscator.obfuscateString(key);
-        val = mObfuscator.obfuscateString(val);
-
-        mKvDatabase.setKeyVal(key, val);
+        mKeeva.put(key, val);
     }
 
     public String get(String key) {
-        SoomlaUtils.LogDebug(TAG, "trying to fetch a value for key: " + key + (mStorageName != null ? " from storage: " + mStorageName : ""));
-        key = mObfuscator.obfuscateString(key);
-
-        String val = mKvDatabase.getKeyVal(key);
-
-        if (val != null && !TextUtils.isEmpty(val)) {
-            try {
-                val = mObfuscator.unobfuscateToString(val);
-            } catch (AESObfuscator.ValidationException e) {
-                SoomlaUtils.LogError(TAG, e.getMessage());
-                val = "";
-            }
-
-            SoomlaUtils.LogDebug(TAG, "the fetched value is " + val);
-        }
-        return val;
+        return mKeeva.get(key);
     }
 
     public List<String> getOnlyEncryptedKeys() {
-
-        SoomlaUtils.LogDebug(TAG, "trying to fetch all keys" + (mStorageName != null ? " from storage: " + mStorageName : ""));
-
-        List<String> encryptedKeys = mKvDatabase.getAllKeys();
-        List<String> resultKeys = new ArrayList<String>();
-
-        for (String encryptedKey : encryptedKeys) {
-            try {
-                String unencryptedKey = mObfuscator.unobfuscateToString(encryptedKey);
-                resultKeys.add(unencryptedKey);
-            } catch (AESObfuscator.ValidationException e) {
-                SoomlaUtils.LogDebug(TAG, e.getMessage());
-            } catch (RuntimeException e) {
-                SoomlaUtils.LogError(TAG, e.getMessage());
-            }
-        }
-
-        return resultKeys;
+        return mKeeva.getOnlyEncryptedKeys();
     }
 
     public int countForNonEncryptedQuery(String query) {
-        SoomlaUtils.LogDebug(TAG, "trying to fetch count for query: " + query + (mStorageName != null ? " from storage: " + mStorageName : ""));
-
-        return mKvDatabase.getQueryCount(query);
+        return mKeeva.countForNonEncryptedQuery(query);
     }
 
     public String oneForNonEncryptedQuery(String query) {
-
-        SoomlaUtils.LogDebug(TAG, "trying to fetch one for query: " + query + (mStorageName != null ? " from storage: " + mStorageName : ""));
-
-        String val = mKvDatabase.getQueryOne(query);
-        if (val != null && !TextUtils.isEmpty(val)) {
-            try {
-                val = mObfuscator.unobfuscateToString(val);
-                return val;
-            } catch (AESObfuscator.ValidationException e) {
-                SoomlaUtils.LogError(TAG, e.getMessage());
-            }
-        }
-
-        return null;
+        return mKeeva.oneForNonEncryptedQuery(query);
     }
 
     public HashMap<String, String> getForNonEncryptedQuery(String query) {
-        return getForNonEncryptedQuery(query, 0);
+        return mKeeva.getForNonEncryptedQuery(query);
     }
 
     public HashMap<String, String> getForNonEncryptedQuery(String query, int limit) {
-        SoomlaUtils.LogDebug(TAG, "trying to fetch values for query: " + query +
-                (limit > 0 ? " with limit: " + limit : "") +
-                (mStorageName != null ? " from storage: " + mStorageName : ""));
-
-        HashMap<String, String> vals = mKvDatabase.getQueryVals(query, limit);
-        HashMap<String, String> results = new HashMap<String, String>();
-        for (String key : vals.keySet()) {
-            String val = vals.get(key);
-            if (val != null && !TextUtils.isEmpty(val)) {
-                try {
-                    val = mObfuscator.unobfuscateToString(val);
-                    results.put(key, val);
-                } catch (AESObfuscator.ValidationException e) {
-                    SoomlaUtils.LogError(TAG, e.getMessage());
-                }
-            }
-        }
-
-        SoomlaUtils.LogDebug(TAG, "fetched " + results.size() + " results");
-
-        return results;
+        return mKeeva.getForNonEncryptedQuery(query, limit);
     }
 
     public String getForNonEncryptedKey(String key) {
-
-        SoomlaUtils.LogDebug(TAG, "trying to fetch a value for key: " + key + (mStorageName != null ? " from storage: " + mStorageName : ""));
-
-        String val = mKvDatabase.getKeyVal(key);
-
-        if (val != null && !TextUtils.isEmpty(val)) {
-            try {
-                val = mObfuscator.unobfuscateToString(val);
-            } catch (AESObfuscator.ValidationException e) {
-                SoomlaUtils.LogError(TAG, e.getMessage());
-                val = "";
-            }
-
-            SoomlaUtils.LogDebug(TAG, "the fetched value is " + val);
-        }
-        return val;
+        return mKeeva.getForNonEncryptedKey(key);
     }
 
     public void removeForNonEncryptedKey(String key) {
-        SoomlaUtils.LogDebug(TAG, "deleting " + key + (mStorageName != null ? " from storage: " + mStorageName : ""));
-
-        mKvDatabase.deleteKeyVal(key);
+        mKeeva.removeForNonEncryptedKey(key);
     }
 
     public void putForNonEncryptedKey(String key, String val) {
-
-        SoomlaUtils.LogDebug(TAG, "setting " + val + " for key: " + key + (mStorageName != null ? " in storage: " + mStorageName : ""));
-
-        val = mObfuscator.obfuscateString(val);
-        mKvDatabase.setKeyVal(key, val);
+        mKeeva.putForNonEncryptedKey(key, val);
     }
-
 
     /**
      * Private Members
@@ -335,10 +233,7 @@ public class KeyValueStorage {
     private static final String TAG = "SOOMLA KeyValueStorage"; //used for Log Messages
     public static final String SOOMLA_DATABASE_NAME = "store.kv.db";
 
-    private AESObfuscator mObfuscator;
-    private KeyValDatabase mKvDatabase;
-    private String mStorageName;
-    private String mSecret;
+    private Keeva mKeeva;
 
     private static KeyValueStorage sSoomlaKeyValueStorage;
 }
