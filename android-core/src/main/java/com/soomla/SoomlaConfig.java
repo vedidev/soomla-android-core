@@ -53,7 +53,7 @@ public class SoomlaConfig {
     public static final String DB_KEY_PREFIX = "soomla.";
 
     /** Shared Preferences **/
-    public static final String PREFS_NAME      = "store.prefs";
+    public static final String PREFS_NAME      = "store.prefs"; //TODO check if needed
     public static final String DB_INITIALIZED  = "db_initialized";
 
 }

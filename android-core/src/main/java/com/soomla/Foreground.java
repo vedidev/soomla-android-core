@@ -97,7 +97,7 @@ public abstract class Foreground {
 
         // Constructor for inheriting class
         public ForegroundNew() {
-            SoomlaApp.instance().registerActivityLifecycleCallbacks(this);
+            SoomlaApp.appInstance().registerActivityLifecycleCallbacks(this);
         }
 
         @Override
@@ -112,10 +112,22 @@ public abstract class Foreground {
 
         @Override
         public void onActivityResumed(Activity activity) {
+            if (count <= 0) {
+                count = 1;
+            }
+            if (refs <= 0) {
+                refs = 1;
+            }
         }
 
         @Override
         public void onActivityPaused(Activity activity) {
+            if (count <= 0) {
+                count = 1;
+            }
+            if (refs <= 0) {
+                refs = 1;
+            }
         }
 
         @Override

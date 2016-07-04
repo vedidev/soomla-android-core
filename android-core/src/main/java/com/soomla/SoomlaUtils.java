@@ -62,25 +62,6 @@ public class SoomlaUtils {
     }
 
     /**
-     * Retrieves Android device Id.
-     *
-     * @return androidId which is the id of the device being used
-     */
-    public static String deviceId() {
-        String androidId = Settings.Secure.getString(SoomlaApp.getAppContext().getContentResolver(),
-                Settings.Secure.ANDROID_ID);
-        if (androidId == null) {
-            // This is a fallback in case the device id cannot be retrieved on the device
-            // (happened on some devices !)
-            SoomlaUtils.LogError("SOOMLA ObscuredSharedPreferences",
-                    "Couldn't fetch ANDROID_ID. Using generated SOOMLA id.");
-            androidId = generateSoomlaId();
-        }
-
-        return androidId;
-    }
-
-    /**
      * Retrieves the class name (to be used for serialization/deserialization
      * for the passed instance
      * @param target The instance to get the class name for
@@ -90,19 +71,11 @@ public class SoomlaUtils {
         return target.getClass().getSimpleName();
     }
 
-	private static String generateSoomlaId() {
-		String generatedId = KeyValueStorage.getValue(DB_KEY_SOOMLA_GENERATED_ID);
-		if (TextUtils.isEmpty(generatedId)) {
-			generatedId = "SOOMLA_ID_a" + String.format("%05d", new Random().nextInt(100000)) + String.format("%05d", new Random().nextInt(100000));
-			KeyValueStorage.setValue(DB_KEY_SOOMLA_GENERATED_ID, generatedId);
-		}
-		return generatedId;
-	}
+
 
 
     /** Private Members **/
 
     private static String TAG = "SOOMLA SoomlaUtils"; //used for Log messages
 
-	private static final String DB_KEY_SOOMLA_GENERATED_ID = SoomlaConfig.DB_KEY_PREFIX + "generatedid";
 }

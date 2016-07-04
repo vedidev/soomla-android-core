@@ -1,7 +1,5 @@
 .DS_Store
 
-*.jar
-
 # Built application files
 *.apk
 *.ap_
