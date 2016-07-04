@@ -26,10 +26,9 @@ proguard/
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm
 
 ## Directory-based project format
-.idea/*
+**idea/
 
 ## Additional for IntelliJ
-out/
 *.iml
 build/
 gradle/
