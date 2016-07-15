@@ -1,3 +1,13 @@
+### v1.2.0 [view commit logs](https://github.com/soomla/soomla-android-core/compare/v1.1.1...v1.2.0)
+
+* New Features
+  * Added integration method without using SoomlaApp as main Application
+
+### v1.1.1 [view commit logs](https://github.com/soomla/soomla-android-core/compare/v1.1.0...v1.1.1)
+
+* Fixes
+  * Fixed getOnlyEncryptedKeys when there are unencrypted keys present
+
 ### v1.1.0 [view commit logs](https://github.com/soomla/soomla-android-core/compare/v1.0.5...v1.1.0)
 
 * New Features
