@@ -21,5 +21,5 @@ public class Soomla {
 
     public static String SECRET = "SOOMLA_SEC";
 
-    public static final String VERSION = "1.3.0";
+    public static final String VERSION = "1.2.0";
 }
